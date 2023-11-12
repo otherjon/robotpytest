@@ -8,8 +8,10 @@ kBrushless = CANSparkMaxLowLevel.MotorType.kBrushless
 SwerveConfig = namedtuple("SwerveConfig", ["steering_can_id", "encoder_dio"])
 
 # Define the maximum steering motor speeds for auto and manual
-MAX_AUTO_TURN_SPEED = 0.2
-MAX_MANUAL_TURN_SPEED = 0.3
+MIN_AUTO_TURN_SPEED = 0.03
+MAX_AUTO_TURN_SPEED = 0.3
+MAX_MANUAL_TURN_SPEED = 0.4
+MAX_ALLOWED_HEADING_ERROR=0.005
 
 class SwerveModule:
     cfg: SwerveConfig
@@ -21,6 +23,7 @@ class SwerveModule:
         self.steering_motor = CANSparkMax(self.cfg.steering_can_id, kBrushless)
         self.enc = wpilib.DutyCycleEncoder(self.cfg.encoder_dio)
         self.target_heading = None
+        self.steering_amount = 0
 
     def heading(self):
         """
@@ -72,7 +75,7 @@ class SwerveModule:
         curr = self.heading()
         diff = (curr - self.target_heading) % 1  # force range into 0->0.99999
         
-        if abs(self.target_heading - curr) < 0.001:
+        if abs(self.target_heading - curr) < MAX_ALLOWED_HEADING_ERROR:
             # We've reached our auto-steering target heading!
             self.steering_motor.set(0)
             self.target_heading = None
@@ -91,7 +94,8 @@ class SwerveModule:
         #   If diff is far from 0.5 (close to 0.0 or 0.9999), turn slowly.
 
         if diff <= 0.5:
-            self.steering_motor.set(MAX_AUTO_TURN_SPEED*diff)
+            steering_value = max(MIN_AUTO_TURN_SPEED, MAX_AUTO_TURN_SPEED*diff)
         else:
-            self.steering_motor.set(MAX_AUTO_TURN_SPEED*(1.0-diff))
+            steering_value = min(-MIN_AUTO_TURN_SPEED, -MAX_AUTO_TURN_SPEED*(1.0-diff))
+        self.steering_motor.set(steering_value)
             
