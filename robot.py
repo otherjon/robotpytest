@@ -10,7 +10,7 @@ class SwerveTestRobot(MagicRobot):
     # Define components (and their configurations) here
     #
     swerve_1: SwerveModule
-    swerve_1_cfg = SwerveConfig(steering_can_id=1, encoder_dio=1)
+    swerve_1_cfg = SwerveConfig(steering_can_id=5, encoder_dio=1)
 
     # You can even pass constants to components
 
